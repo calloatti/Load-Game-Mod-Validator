@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11626.88 stable
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Load Game Mod Validator", "Load Game Mod Validator.csproj", "{5FCA7AA9-C73D-2D2B-1037-401FEDB6E413}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5FCA7AA9-C73D-2D2B-1037-401FEDB6E413}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FCA7AA9-C73D-2D2B-1037-401FEDB6E413}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FCA7AA9-C73D-2D2B-1037-401FEDB6E413}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FCA7AA9-C73D-2D2B-1037-401FEDB6E413}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8A521B1F-CEE6-4B8F-B823-DDD87F2BFD1E}
+	EndGlobalSection
+EndGlobal
