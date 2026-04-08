@@ -9,6 +9,7 @@ using Timberborn.SingletonSystem;
 using Timberborn.Versioning;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Calloatti.Config; //
 
 namespace Calloatti.LoadGameModValidator
 {
@@ -19,6 +20,18 @@ namespace Calloatti.LoadGameModValidator
     private readonly ILoc _loc;
     private readonly ModRepository _modRepository;
     private readonly DialogBoxShower _dialogBoxShower;
+
+    // --- COLUMN WIDTH DEFINITIONS ---
+    private static readonly int NameWidth = 260;
+    private static readonly int IdWidth = 280;
+    private static readonly int FolderWidth = 260;
+    private static readonly int MinVerWidth = 140;
+    private static readonly int SavedVerWidth = 120;
+    private static readonly int CurrentVerWidth = 120;
+    private static readonly int StatusWidth = 130;
+
+    // Base padding: 8 (left) + 20 (scrollbar) = 28
+    private const int BasePadding = 28;
 
     public UnifiedModListDialog(ILoc loc, ModRepository modRepository, DialogBoxShower dialogBoxShower)
     {
@@ -34,8 +47,19 @@ namespace Calloatti.LoadGameModValidator
 
     public void ShowDialog(SaveMetadata metadata, Action continueCallback)
     {
+      // 1. Fetch visibility settings from ModStarter's static Config instance
+      bool showId = ModStarter.Config.GetBool("ShowIdColumn");
+      bool showFolder = ModStarter.Config.GetBool("ShowFolderColumn");
+      bool showMinVer = ModStarter.Config.GetBool("ShowMinVerColumn");
+
+      // 2. Calculate dynamic total width based on visible columns
+      int calculatedTotalWidth = NameWidth + SavedVerWidth + CurrentVerWidth + StatusWidth + BasePadding;
+      if (showId) calculatedTotalWidth += IdWidth;
+      if (showFolder) calculatedTotalWidth += FolderWidth;
+      if (showMinVer) calculatedTotalWidth += MinVerWidth;
+
       VisualElement root = new VisualElement();
-      root.style.width = 1100;
+      root.style.width = calculatedTotalWidth;
       root.style.paddingBottom = 15;
 
       // --- TOP BAR (Warning + Toggle) ---
@@ -69,14 +93,15 @@ namespace Calloatti.LoadGameModValidator
       root.Add(topBar);
 
       // FIXED HEADER
-      // FIX: Swapped SavedVersion and CurrentVersion
       VisualElement headerRow = CreateRow(
           _loc.T("Calloatti.LoadGameModValidator.Column.Name"),
           _loc.T("Calloatti.LoadGameModValidator.Column.Id"),
+          _loc.T("Calloatti.LoadGameModValidator.Column.VersionFolder"),
+          _loc.T("Calloatti.LoadGameModValidator.Column.MinGameVer"),
           _loc.T("Calloatti.LoadGameModValidator.Column.SavedVersion"),
           _loc.T("Calloatti.LoadGameModValidator.Column.CurrentVersion"),
           _loc.T("Calloatti.LoadGameModValidator.Column.Status"),
-          Color.white, true
+          Color.white, true, showId, showFolder, showMinVer
       );
       headerRow.style.marginTop = 15;
       headerRow.style.paddingRight = 20;
@@ -139,8 +164,7 @@ namespace Calloatti.LoadGameModValidator
 
       foreach (var row in rowsData)
       {
-        // FIX: Swapped row.SavedVersion and row.CurrentVersion
-        VisualElement rowElement = CreateRow(row.Name, row.Id, row.SavedVersion, row.CurrentVersion, _loc.T(row.StatusKey), row.StatusColor, false);
+        VisualElement rowElement = CreateRow(row.Name, row.Id, row.VersionFolder, row.MinGameVersion, row.SavedVersion, row.CurrentVersion, _loc.T(row.StatusKey), row.StatusColor, false, showId, showFolder, showMinVer);
 
         if (row.StatusKey == "Calloatti.LoadGameModValidator.Status.Match")
         {
@@ -169,7 +193,7 @@ namespace Calloatti.LoadGameModValidator
 
       _dialogBoxShower.Create()
           .AddContent(root)
-          .SetMaxWidth(1200)
+          .SetMaxWidth(calculatedTotalWidth + 100)
           .SetConfirmButton(continueCallback)
           .SetDefaultCancelButton()
           .Show();
@@ -177,7 +201,7 @@ namespace Calloatti.LoadGameModValidator
 
     private class ModEntryData
     {
-      public string Name, Id, CurrentVersion, SavedVersion, StatusKey;
+      public string Name, Id, VersionFolder, MinGameVersion, CurrentVersion, SavedVersion, StatusKey;
       public Color StatusColor;
     }
 
@@ -196,13 +220,17 @@ namespace Calloatti.LoadGameModValidator
             Name = savedMod.Name,
             Id = savedMod.Id,
             SavedVersion = Timberborn.Versioning.Version.Create(savedMod.Version).Formatted,
-            CurrentVersion = "-"
+            CurrentVersion = "-",
+            MinGameVersion = "-",
+            VersionFolder = "-"
           };
 
           var activeMatch = activeMods.FirstOrDefault(m => m.Manifest.Id == savedMod.Id);
           if (activeMatch != null)
           {
             entry.CurrentVersion = activeMatch.Manifest.Version.Formatted;
+            entry.MinGameVersion = activeMatch.Manifest.MinimumGameVersion.Formatted;
+            entry.VersionFolder = GetFolderDisplay(activeMatch.ModDirectory);
 
             if (activeMatch.Manifest.Version.Full == savedMod.Version)
             {
@@ -222,6 +250,9 @@ namespace Calloatti.LoadGameModValidator
             if (inactiveMatch != null)
             {
               entry.CurrentVersion = inactiveMatch.Manifest.Version.Formatted;
+              entry.MinGameVersion = inactiveMatch.Manifest.MinimumGameVersion.Formatted;
+              entry.VersionFolder = GetFolderDisplay(inactiveMatch.ModDirectory);
+
               entry.StatusKey = "Calloatti.LoadGameModValidator.Status.Disabled";
               entry.StatusColor = new Color(1.0f, 0.55f, 0.0f);
             }
@@ -244,6 +275,8 @@ namespace Calloatti.LoadGameModValidator
           Id = active.Manifest.Id,
           CurrentVersion = active.Manifest.Version.Formatted,
           SavedVersion = "-",
+          MinGameVersion = active.Manifest.MinimumGameVersion.Formatted,
+          VersionFolder = GetFolderDisplay(active.ModDirectory),
           StatusKey = "Calloatti.LoadGameModValidator.Status.New",
           StatusColor = new Color(0.4f, 0.9f, 0.4f)
         });
@@ -252,8 +285,16 @@ namespace Calloatti.LoadGameModValidator
       return entries.OrderBy(e => e.Name).ToList();
     }
 
-    // FIX: Swapped parameters to match the new order (savVer, then curVer)
-    private VisualElement CreateRow(string name, string id, string savVer, string curVer, string status, Color color, bool isHeader)
+    private string GetFolderDisplay(ModDirectory modDir)
+    {
+      if (modDir.OriginName != modDir.Directory.Name)
+      {
+        return $"{modDir.OriginName}\\{modDir.Directory.Name}";
+      }
+      return modDir.Directory.Name;
+    }
+
+    private VisualElement CreateRow(string name, string id, string verFolder, string minVer, string savVer, string curVer, string status, Color color, bool isHeader, bool showId, bool showFolder, bool showMinVer)
     {
       VisualElement row = new VisualElement();
       row.style.flexDirection = FlexDirection.Row;
@@ -266,14 +307,16 @@ namespace Calloatti.LoadGameModValidator
       if (isHeader)
       {
         row.style.borderBottomWidth = 2;
-        row.style.unityFontStyleAndWeight = FontStyle.Bold;
       }
 
-      row.Add(CreateCell(name, 280, color));
-      row.Add(CreateCell(id, 280, color));
-      row.Add(CreateCell(savVer, 145, color)); // Saved version added first
-      row.Add(CreateCell(curVer, 145, color)); // Current version added second
-      row.Add(CreateCell(status, 120, color));
+      // Dynamically add cells based on SimpleConfig flags
+      row.Add(CreateCell(name, NameWidth, color));
+      if (showId) row.Add(CreateCell(id, IdWidth, color));
+      if (showFolder) row.Add(CreateCell(verFolder, FolderWidth, color));
+      if (showMinVer) row.Add(CreateCell(minVer, MinVerWidth, color));
+      row.Add(CreateCell(savVer, SavedVerWidth, color));
+      row.Add(CreateCell(curVer, CurrentVerWidth, color));
+      row.Add(CreateCell(status, StatusWidth, color));
 
       return row;
     }

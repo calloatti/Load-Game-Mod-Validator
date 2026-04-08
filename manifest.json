@@ -1,6 +1,6 @@
 {
     "Name": "Load Game Mod Validator",
-    "Version": "1.0.0",
+    "Version": "1.0.1",
     "Id": "Calloatti.LoadGameModValidator",
     "MinimumGameVersion": "1.0.12.9",
     "Description": "Replaces the vanilla dual-list mod incompatibility screen with a single unified list.",
