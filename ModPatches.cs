@@ -16,9 +16,11 @@ namespace Calloatti.LoadGameModValidator
       if (UnifiedModListDialog.Instance != null)
       {
         UnifiedModListDialog.Instance.ShowDialog(metadata, continueCallback);
+        return false; // Skip the vanilla UI entirely
       }
 
-      return false; // Skip the vanilla UI entirely
+      // Fallback: If our UI failed to load, return true to let the vanilla warning dialog show up!
+      return true;
     }
   }
 }
