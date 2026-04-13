@@ -1,3 +1,5 @@
+1.0.3
+Now also shows dialog if there are new mods.
 1.0.2
 ShowModsIncompatibilityDialog patch returns true if custom dialog fails to load.
 1.0.1
