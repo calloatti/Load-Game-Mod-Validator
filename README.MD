@@ -1,3 +1,17 @@
-Load Game Mod Validator
+﻿Load Game Mod Validator
 
-https://steamcommunity.com/sharedfiles/filedetails/?edit=true&id=3702622222
+https://github.com/calloatti/Load-Game-Mod-Validator
+
+https://steamcommunity.com/sharedfiles/filedetails/?id=3702622222
+
+Mods on GitHub
+
+https://github.com/search?q=owner%3Acalloatti+sort%3Aname-asc+%22Timberborn+Mod%22&type=repositories
+
+Mods on Steam Workshop
+
+https://steamcommunity.com/sharedfiles/filedetails/?id=3682179025
+
+Mods zip files
+
+https://github.com/calloatti/ModZips
