@@ -1,5 +1,4 @@
 ﻿using Bindito.Core;
-using Timberborn.ModManagerScene;
 
 namespace Calloatti.LoadGameModValidator
 {
@@ -9,6 +8,9 @@ namespace Calloatti.LoadGameModValidator
   {
     protected override void Configure()
     {
+      // Play dead if Sync Mods Pro is running
+      if (!ModStarter.ShouldRun) return;
+
       Bind<UnifiedModListDialog>().AsSingleton();
     }
   }

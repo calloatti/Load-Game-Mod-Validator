@@ -1,3 +1,7 @@
+Game Version: 1.0.0.0 - Mod Version: 2.0.0
+- Added a "soft-disable" safeguard: the mod now queries the active AppDomain and yields control (playing dead) if SyncModsPro is detected to prevent any cross-mod code conflicts.
+- Added ModCheck lightweight active memory utility.
+--------------------------------------------------------------------------------
 Game Version: 1.0.0.0 - Mod Version: 1.0.3
 - Now also shows dialog if there are new mods.
 --------------------------------------------------------------------------------
